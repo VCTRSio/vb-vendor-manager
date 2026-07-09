@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Vctrs\Plugins\VendorManager\Http\Controllers\OnboardingController;
 use Vctrs\Plugins\VendorManager\Http\Controllers\VendorAdminController;
-use Vctrs\Plugins\VendorManager\Http\Controllers\VendorController;
 use Vctrs\Plugins\VendorManager\Http\Controllers\VendorCredentialController;
 use Vctrs\Plugins\VendorManager\Http\Controllers\VendorDocumentAdminController;
 use Vctrs\Plugins\VendorManager\Http\Controllers\VendorDocumentController;
@@ -14,9 +13,6 @@ use Vctrs\Plugins\VendorManager\Http\Controllers\VendorReadController;
 use Vctrs\Plugins\VendorManager\Http\Controllers\VendorReportController;
 
 Route::middleware(['web', 'auth', 'tenant'])->prefix('dashboard/vendor')->name('vendor.')->group(function () {
-    Route::get('/', [VendorController::class, 'index'])
-        ->middleware('can:vendor.view.rooftop')->name('index');
-
     Route::get('/onboarding', [OnboardingController::class, 'create'])
         ->middleware('can:vendor.onboard.rooftop')->name('onboarding');
     Route::post('/onboarding', [OnboardingController::class, 'store'])
@@ -74,7 +70,4 @@ Route::middleware(['web', 'auth', 'tenant'])->prefix('dashboard/vendor')->name('
         ->middleware('can:vendor.manage.rooftop')->where('id', '[0-9a-f-]{36}')->name('api.update');
     Route::post('/api/{id}/status', [VendorMutationController::class, 'updateStatus'])
         ->middleware('can:vendor.manage.rooftop')->where('id', '[0-9a-f-]{36}')->name('api.status');
-
-    Route::get('/{id}', [VendorController::class, 'show'])
-        ->middleware('can:vendor.view.rooftop')->name('show');
 });
