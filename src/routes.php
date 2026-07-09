@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Vctrs\Plugins\VendorManager\Http\Controllers\OnboardingController;
 use Vctrs\Plugins\VendorManager\Http\Controllers\VendorAdminController;
 use Vctrs\Plugins\VendorManager\Http\Controllers\VendorCredentialController;
 use Vctrs\Plugins\VendorManager\Http\Controllers\VendorDocumentAdminController;
@@ -13,11 +12,6 @@ use Vctrs\Plugins\VendorManager\Http\Controllers\VendorReadController;
 use Vctrs\Plugins\VendorManager\Http\Controllers\VendorReportController;
 
 Route::middleware(['web', 'auth', 'tenant'])->prefix('dashboard/vendor')->name('vendor.')->group(function () {
-    Route::get('/onboarding', [OnboardingController::class, 'create'])
-        ->middleware('can:vendor.onboard.rooftop')->name('onboarding');
-    Route::post('/onboarding', [OnboardingController::class, 'store'])
-        ->middleware('can:vendor.onboard.rooftop')->name('onboarding.store');
-
     Route::put('/{id}/admin', [VendorAdminController::class, 'update'])
         ->middleware('can:vendor.admin.manage.rooftop')->where('id', '[0-9a-f-]+')->name('admin.update');
     Route::delete('/{id}/admin', [VendorAdminController::class, 'softDelete'])

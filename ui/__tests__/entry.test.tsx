@@ -29,13 +29,57 @@ beforeEach(() => {
   })) as any;
 });
 
+// Let queued microtasks/effects flush (fetch resolves, React re-renders).
+const flush = () => new Promise((r) => setTimeout(r, 0));
+
+// Poll until `check` returns truthy or we give up — accommodates the async
+// fetch → setState → React commit chain without hard-coding a tick count.
+async function waitFor<T>(check: () => T | null | undefined, tries = 50): Promise<T> {
+  for (let i = 0; i < tries; i++) {
+    const v = check();
+    if (v) return v;
+    await flush();
+  }
+  throw new Error('waitFor: condition never met');
+}
+
 describe('vendor-manager esm entry', () => {
   it('exports a mount function that renders and returns cleanup', async () => {
     const el = document.createElement('div');
     expect(typeof plugin.mount).toBe('function');
     const cleanup = plugin.mount(el, host as any, { slug: 'vb-vendor-manager', route: '', entryKey: undefined });
-    await new Promise((r) => setTimeout(r, 0));
+    await flush();
     expect(typeof cleanup).toBe('function');
+    cleanup?.();
+  });
+
+  it('renders the list view with a vendor row from the mocked /list fetch', async () => {
+    const el = document.createElement('div');
+    const cleanup = plugin.mount(el, host as any, { slug: 'vb-vendor-manager', route: '', entryKey: undefined });
+
+    // stats + list resolve via Promise.all; wait for the table row to commit.
+    await waitFor(() => el.querySelector('[data-testid="vm-row"]'));
+
+    const rows = el.querySelectorAll('[data-testid="vm-row"]');
+    expect(rows.length).toBe(1);
+    expect(el.querySelector('[data-testid="vm-list"]')).not.toBeNull();
+    expect(el.textContent).toContain('Acme');
+    cleanup?.();
+  });
+
+  it('navigates to the detail view when a vendor row is clicked', async () => {
+    const el = document.createElement('div');
+    const cleanup = plugin.mount(el, host as any, { slug: 'vb-vendor-manager', route: '', entryKey: undefined });
+
+    const row = (await waitFor(() => el.querySelector('[data-testid="vm-row"]'))) as HTMLElement;
+    // Fire a real click through the DOM so React's onClick handler runs.
+    row.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+
+    // detail effect fires GET /api/{id}, then re-renders.
+    const detail = await waitFor(() => el.querySelector('[data-testid="vm-detail"]'));
+    // list view is gone once the detail view mounts.
+    expect(el.querySelector('[data-testid="vm-list"]')).toBeNull();
+    expect(detail.textContent).toContain('Acme');
     cleanup?.();
   });
 });
