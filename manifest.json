@@ -1,0 +1,122 @@
+{
+  "id": "vb-vendor-manager",
+  "slug": "vb-vendor-manager",
+  "name": "Vendor Manager",
+  "version": "1.0.0",
+  "description": "Vendor directory, onboarding workflow, documents, credentials, and compliance settings.",
+  "author": "Carmelo Santana",
+  "visibility": "first_party",
+  "status": "published",
+  "enabledByDefault": false,
+  "provider": "Vctrs\\Plugins\\VendorManager\\VendorManagerServiceProvider",
+  "engines": { "vctrbase": "^1.0.0" },
+  "uiMode": "module",
+  "ui": {
+    "entry": "dist/entry.js",
+    "nav": [{ "key": "vendor", "label": "Vendors", "path": "/dashboard/plugins/vb-vendor-manager/view" }],
+    "routes": [{ "route": "/dashboard/plugins/vb-vendor-manager/view", "title": "Vendors" }]
+  },
+  "permissions": [
+    "vendor.view.rooftop",
+    "vendor.manage.rooftop",
+    "vendor.onboard.rooftop",
+    "vendor.documents.write.rooftop",
+    "vendor.settings.write.rooftop",
+    "vendor.admin.manage.rooftop",
+    "vendor.reports.view.rooftop",
+    "vendor.api.manage.rooftop"
+  ],
+  "settings": {
+    "permission": "vendor.settings.write.rooftop",
+    "admin": [
+      {
+        "key": "coiAlertDays1",
+        "label": "COI alert — first (days)",
+        "group": "Alerts",
+        "type": "number",
+        "default": 60,
+        "min": 1
+      },
+      {
+        "key": "coiAlertDays2",
+        "label": "COI alert — second (days)",
+        "group": "Alerts",
+        "type": "number",
+        "default": 30,
+        "min": 1
+      },
+      {
+        "key": "coiAlertDays3",
+        "label": "COI alert — third (days)",
+        "group": "Alerts",
+        "type": "number",
+        "default": 7,
+        "min": 1
+      },
+      {
+        "key": "contractAlertDays",
+        "label": "Contract alert (days)",
+        "group": "Alerts",
+        "type": "number",
+        "default": 30,
+        "min": 1
+      },
+      {
+        "key": "credentialAlertDays",
+        "label": "Credential alert (days)",
+        "group": "Alerts",
+        "type": "number",
+        "default": 30,
+        "min": 1
+      },
+      {
+        "key": "requireCoi",
+        "label": "Require COI",
+        "group": "Requirements",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "key": "requireW9",
+        "label": "Require W-9",
+        "group": "Requirements",
+        "type": "boolean",
+        "default": true
+      }
+    ]
+  },
+  "nav": [
+    {
+      "key": "vendor",
+      "label": "Vendors",
+      "href": "/dashboard/plugins/vb-vendor-manager/view",
+      "icon": "handshake"
+    }
+  ],
+  "widgets": [
+    {
+      "key": "vendor.activeVendors",
+      "title": "Active vendors",
+      "permission": "vendor.view.rooftop"
+    },
+    {
+      "key": "vendor.expiringDocuments",
+      "title": "Expiring documents",
+      "permission": "vendor.view.rooftop"
+    },
+    {
+      "key": "vendor.byCategory",
+      "title": "Vendors by category",
+      "permission": "vendor.view.rooftop"
+    },
+    {
+      "key": "vendor.recentlyOnboarded",
+      "title": "Recently onboarded",
+      "permission": "vendor.view.rooftop"
+    }
+  ],
+  "jobs": [
+    { "key": "vendor-manager/expiry-check", "schedule": "0 8 * * *", "description": "Daily COI/contract/credential expiry alerts — Tasks + Feed." },
+    { "key": "vendor-manager/escalation-check", "schedule": "0 9 * * *", "description": "Daily escalation of <7d unresolved expiries to Feed." }
+  ]
+}
