@@ -5,7 +5,7 @@ All notable changes to Vendor Manager are documented here.
 ## [1.0.0] - 2026-07-09
 
 ### Added
-- First-party PHP-native plugin scaffold extracted from the VCTRbase monorepo (`plugins/vendor-manager`), reshaped as a standalone signed release repo in the `Vctrs\Plugins\VendorManager` namespace.
+- First-party PHP-native plugin scaffold extracted from the VCTRbase monorepo (`plugins/vendor-manager`), reshaped as a standalone signed release repo in the `Vctrs\Plugins\VbVendorManager` namespace.
 - Vendor directory & profiles — CRUD, status lifecycle, soft-delete/restore (`VendorProfile`, `VendorService`).
 - Onboarding workflow — stepwise onboarding creation and advancement (`VendorOnboarding`, `OnboardingController`, `VendorOnboardingController`).
 - Documents & credentials — per-vendor document and credential add/list/remove with admin soft-delete/restore (`VendorDocument`, `VendorCredential`).

@@ -5,7 +5,7 @@ workflow, documents, credentials, API keys, and compliance settings — with
 expiry alerting and escalation.
 
 **Verified · by Carmelo Santana.** First-party, signed, PHP-native plugin.
-Slug `vb-vendor-manager` · namespace `Vctrs\Plugins\VendorManager`. Ships from
+Slug `vb-vendor-manager` · namespace `Vctrs\Plugins\VbVendorManager`. Ships from
 outside the monorepo and is autoloaded by `App\Plugins\RuntimeAutoloader`. Its
 release ZIP is signed with the Carmelo Santana Ed25519 key
 (`keyId carmelo-ed25519-2026`), so it installs as **Verified** and its server
