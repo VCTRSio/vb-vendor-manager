@@ -116,7 +116,7 @@
     }
   ],
   "jobs": [
-    { "key": "vendor-manager/expiry-check", "schedule": "0 8 * * *", "description": "Daily COI/contract/credential expiry alerts — Tasks + Feed." },
-    { "key": "vendor-manager/escalation-check", "schedule": "0 9 * * *", "description": "Daily escalation of <7d unresolved expiries to Feed." }
+    { "key": "vb-vendor-manager/expiry-check", "schedule": "0 8 * * *", "description": "Daily COI/contract/credential expiry alerts — Tasks + Feed." },
+    { "key": "vb-vendor-manager/escalation-check", "schedule": "0 9 * * *", "description": "Daily escalation of <7d unresolved expiries to Feed." }
   ]
 }

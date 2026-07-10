@@ -53,9 +53,9 @@ class VendorOnboardingController extends Controller
                 tenantId: $vendor->tenant_id,
                 actorType: 'user',
                 actorId: $uid,
-                sourceType: 'vendor-manager',
+                sourceType: 'vb-vendor-manager',
                 sourceId: (string) $vendor->id,
-                pluginNamespace: 'vendor-manager',
+                pluginNamespace: 'vb-vendor-manager',
                 eventType: 'vendor.onboarding.step',
                 summary: 'Vendor "'.$vendor->company_name.'" onboarding: '.str_replace('_', ' ', $v['step']).'.',
             ));

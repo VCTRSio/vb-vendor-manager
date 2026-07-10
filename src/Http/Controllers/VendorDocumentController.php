@@ -55,9 +55,9 @@ class VendorDocumentController extends Controller
                 tenantId: $doc->tenant_id,
                 actorType: 'user',
                 actorId: $uid,
-                sourceType: 'vendor-manager',
+                sourceType: 'vb-vendor-manager',
                 sourceId: (string) $doc->id,
-                pluginNamespace: 'vendor-manager',
+                pluginNamespace: 'vb-vendor-manager',
                 eventType: 'vendor.document.added',
                 summary: "Document added to {$vendor->company_name}: {$doc->document_type}",
             ));

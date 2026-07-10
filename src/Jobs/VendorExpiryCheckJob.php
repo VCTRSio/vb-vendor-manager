@@ -74,7 +74,7 @@ final class VendorExpiryCheckJob extends PluginScheduledJob
 
         try {
             event(new TaskRequested(
-                pluginNamespace: 'vendor-manager',
+                pluginNamespace: 'vb-vendor-manager',
                 tenantType: $doc->tenant_type, tenantId: $doc->tenant_id,
                 requestedBy: TenantContext::SYSTEM_ACTOR,
                 title: "{$urgency}{$company}: {$label} expires in {$days} days",
@@ -89,8 +89,8 @@ final class VendorExpiryCheckJob extends PluginScheduledJob
             event(new FeedEventRequested(
                 tenantType: $doc->tenant_type, tenantId: $doc->tenant_id,
                 actorType: 'system', actorId: TenantContext::SYSTEM_ACTOR,
-                sourceType: 'vendor-manager', sourceId: (string) $doc->id,
-                pluginNamespace: 'vendor-manager', eventType: 'vendor.document_expiry_alert',
+                sourceType: 'vb-vendor-manager', sourceId: (string) $doc->id,
+                pluginNamespace: 'vb-vendor-manager', eventType: 'vendor.document_expiry_alert',
                 summary: "{$urgency}{$company} — {$label} expires in {$days} day{$plural}.",
                 priority: $priority,
             ));
@@ -107,7 +107,7 @@ final class VendorExpiryCheckJob extends PluginScheduledJob
 
         try {
             event(new TaskRequested(
-                pluginNamespace: 'vendor-manager',
+                pluginNamespace: 'vb-vendor-manager',
                 tenantType: $cred->tenant_type, tenantId: $cred->tenant_id,
                 requestedBy: TenantContext::SYSTEM_ACTOR,
                 title: "{$company}: {$cred->credential_name} credential expires in {$days} days",
@@ -122,8 +122,8 @@ final class VendorExpiryCheckJob extends PluginScheduledJob
             event(new FeedEventRequested(
                 tenantType: $cred->tenant_type, tenantId: $cred->tenant_id,
                 actorType: 'system', actorId: TenantContext::SYSTEM_ACTOR,
-                sourceType: 'vendor-manager', sourceId: (string) $cred->id,
-                pluginNamespace: 'vendor-manager', eventType: 'vendor.credential_expiry_alert',
+                sourceType: 'vb-vendor-manager', sourceId: (string) $cred->id,
+                pluginNamespace: 'vb-vendor-manager', eventType: 'vendor.credential_expiry_alert',
                 summary: "{$company} — {$cred->credential_name} ({$type}) credential expires in {$days} days.",
             ));
         } catch (\Throwable $e) {

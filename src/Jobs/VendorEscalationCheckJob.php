@@ -27,8 +27,8 @@ final class VendorEscalationCheckJob extends PluginScheduledJob
                 event(new FeedEventRequested(
                     tenantType: $doc->tenant_type, tenantId: $doc->tenant_id,
                     actorType: 'system', actorId: TenantContext::SYSTEM_ACTOR,
-                    sourceType: 'vendor-manager', sourceId: (string) $doc->id,
-                    pluginNamespace: 'vendor-manager', eventType: 'vendor.expiry_escalation',
+                    sourceType: 'vb-vendor-manager', sourceId: (string) $doc->id,
+                    pluginNamespace: 'vb-vendor-manager', eventType: 'vendor.expiry_escalation',
                     summary: "ESCALATION: {$label} for vendor expires in less than 7 days and has not been renewed.",
                     priority: 'high',
                 ));

@@ -21,7 +21,7 @@ class VendorService
      */
     public function resolveSettings(): array
     {
-        $s = app(PluginSettings::class)->resolve('vendor-manager');
+        $s = app(PluginSettings::class)->resolve('vb-vendor-manager');
 
         return [
             'coiAlertDays1' => (int) ($s['coiAlertDays1'] ?? 60),
@@ -126,9 +126,9 @@ class VendorService
                 tenantId: $vendor->tenant_id,
                 actorType: 'user',
                 actorId: $userId,
-                sourceType: 'vendor-manager',
+                sourceType: 'vb-vendor-manager',
                 sourceId: (string) $vendor->id,
-                pluginNamespace: 'vendor-manager',
+                pluginNamespace: 'vb-vendor-manager',
                 eventType: 'vendor.created',
                 summary: "Vendor created: {$vendor->company_name}",
             ));
