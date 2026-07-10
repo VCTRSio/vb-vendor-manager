@@ -2,7 +2,7 @@
 
 All notable changes to Vendor Manager are documented here.
 
-## [Unreleased]
+## [1.0.1] - 2026-07-10
 
 ### Added
 - **Adopt-existing migrations proven for both hosts.** `tests/VendorMigrationsTest.php`
