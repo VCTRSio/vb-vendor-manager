@@ -78,6 +78,14 @@ it('adopts an existing vendor schema without dropping data on re-run', function 
         'status' => 'active',
     ]);
 
+    // A second sentinel in a different table so the adopt proof isn't limited to one
+    // table — a stray dropIfExists+create on any child migration would wipe this too.
+    DB::table('vendor_settings')->insert([
+        'id' => (string) Str::uuid(),
+        'tenant_type' => 'rooftop',
+        'tenant_id' => (string) Str::uuid(),
+    ]);
+
     // 3. Re-run the migrations. The hasTable genesis guard makes this a no-op.
     $rerun = function () use ($dir) {
         foreach (glob($dir.'/*.php') as $file) {
@@ -86,8 +94,9 @@ it('adopts an existing vendor schema without dropping data on re-run', function 
     };
     expect($rerun)->not->toThrow(Exception::class);
 
-    // 4. The sentinel row still exists (table was ADOPTED, not dropped/recreated)...
+    // 4. Both sentinel rows still exist (tables were ADOPTED, not dropped/recreated)...
     expect(DB::table('vendor_profiles')->where('company_name', 'Sentinel Co')->exists())->toBeTrue();
+    expect(DB::table('vendor_settings')->count())->toBeGreaterThan(0);
     // ...and a representative column is still present (schema left intact).
     expect(Schema::hasColumn('vendor_profiles', 'oem_certifications_json'))->toBeTrue();
 });

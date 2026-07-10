@@ -81,16 +81,21 @@ class VendorOnboardingController extends Controller
                         'kind' => 'vendor',
                         'icon_key' => 'lock',
                         'vendor_id' => $vendor->id,
-                        'created_by' => $uid,
+                        'created_by' => $uid !== '' ? $uid : null,
                     ]);
 
                     // Newly created: add the creator as an owner member (firstOrCreate so a
                     // duplicate is harmless) and seed a single welcome message. Core seeds the
                     // member + welcome ONLY in the create branch, so we do the same here.
-                    $channelMemberClass::firstOrCreate(
-                        ['channel_id' => $channel->id, 'user_id' => $uid],
-                        ['role' => 'owner'],
-                    );
+                    // Core also seeds the member only when a real creator exists
+                    // (`if (opts.createdBy)`); TenantContext::userId() is '' in system/API-key
+                    // contexts, so mirror that guard for exact parity.
+                    if ($uid !== '') {
+                        $channelMemberClass::firstOrCreate(
+                            ['channel_id' => $channel->id, 'user_id' => $uid],
+                            ['role' => 'owner'],
+                        );
+                    }
 
                     $channelMessageClass::create([
                         'channel_id' => $channel->id,
