@@ -72,7 +72,11 @@ if (! function_exists('vmBindTenant')) {
      */
     function vmBindTenant(string $userId, string $tenantId = PLUGIN_TEST_TENANT, string $type = 'rooftop'): TenantContext
     {
-        $ctx = new TenantContext($userId, $type, $tenantId, (string) Str::uuid());
+        // Empty traceId (matching the in-plugin test convention): the AuditObserver
+        // then mints a fresh uuid per write, so multiple writes to the same
+        // resource in one test don't collide on the audit_events unique key
+        // (trace_id, action, resource_type, resource_id).
+        $ctx = new TenantContext($userId, $type, $tenantId, '');
         app()->instance(TenantContext::class, $ctx);
 
         return $ctx;
@@ -134,6 +138,14 @@ if (! function_exists('vmInstallSignedAndBoot')) {
 
         config()->set('plugins.registry_pubkey', $pub);
         config()->set('plugins.require_signature', true);
+
+        // Each install extracts the plugin to storage/app/plugins/<slug> — a
+        // NON-transactional on-disk write that survives the test's DB rollback.
+        // Left in place, the next install's "already installed" guard (which
+        // reads PluginManager::manifest() from the disk scan, not the DB) trips.
+        // Remove any leftover dir and force a rescan so every test installs clean.
+        \Illuminate\Support\Facades\File::deleteDirectory(storage_path('app/plugins/vb-vendor-manager'));
+        app(PluginManager::class)->refresh();
 
         $zip = vmZip();
         $sig = ArtifactSigning::signBytes((string) file_get_contents($zip), (string) $priv);
