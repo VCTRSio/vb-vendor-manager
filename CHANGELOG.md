@@ -2,6 +2,29 @@
 
 All notable changes to Vendor Manager are documented here.
 
+## [Unreleased]
+
+### Added
+- **Adopt-existing migrations proven for both hosts.** `tests/VendorMigrationsTest.php`
+  now covers the existing-host adopt path in addition to the fresh-create path: the
+  genesis `if (Schema::hasTable(...)) return;` guard makes re-running the migrations a
+  no-op that PRESERVES incumbent rows (a sentinel row survives a second `up()` pass), so
+  a host that already owns the vendor tables adopts them rather than dropping/recreating.
+  A column-set drift safety net was added to the fresh-create case.
+- **Onboarding channel auto-create (best-effort).** `VendorOnboardingController::advance()`
+  now mirrors the Next.js core's `getOrCreateVendorChannel`: when a vendor is approved and
+  the active tenant is a rooftop, it get-or-creates the vendor's private channel and, on
+  first creation, seeds an owner member + a welcome message. This is a **NEW SOFT (optional)
+  dependency on the channels plugin** — the block is guarded by `class_exists(...)`,
+  references channels classes only via fully-qualified string names (no compile-time
+  coupling), and is wrapped in `try/catch` so a channel failure never blocks onboarding.
+  **REVISIT:** the clean fix is a `ChannelDirectory::getOrCreateVendorChannel(...)` contract
+  exported by the channels plugin (see the "Channels soft-dependency" note in `README.md`).
+
+### Notes
+- Upgrade policy documented: the genesis `hasTable` guard is first-install idempotency only;
+  future schema changes ship as new, additive, dated migrations — never by editing genesis.
+
 ## [1.0.0] - 2026-07-09
 
 ### Added
