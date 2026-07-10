@@ -1,15 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Vctrs\Plugins\VendorManager\Http\Controllers\VendorAdminController;
-use Vctrs\Plugins\VendorManager\Http\Controllers\VendorCredentialController;
-use Vctrs\Plugins\VendorManager\Http\Controllers\VendorDocumentAdminController;
-use Vctrs\Plugins\VendorManager\Http\Controllers\VendorDocumentController;
-use Vctrs\Plugins\VendorManager\Http\Controllers\VendorApiKeyController;
-use Vctrs\Plugins\VendorManager\Http\Controllers\VendorMutationController;
-use Vctrs\Plugins\VendorManager\Http\Controllers\VendorOnboardingController;
-use Vctrs\Plugins\VendorManager\Http\Controllers\VendorReadController;
-use Vctrs\Plugins\VendorManager\Http\Controllers\VendorReportController;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorAdminController;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorCredentialController;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorDocumentAdminController;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorDocumentController;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorApiKeyController;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorMutationController;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorOnboardingController;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorReadController;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorReportController;
 
 Route::middleware(['web', 'auth', 'tenant'])->prefix('dashboard/vendor')->name('vendor.')->group(function () {
     Route::put('/{id}/admin', [VendorAdminController::class, 'update'])

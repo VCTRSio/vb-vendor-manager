@@ -9,7 +9,7 @@ declare(strict_types=1);
  * container; only the plugin's tests/ dir is synced into the worktree. So the
  * plugin's own classes are NOT on Composer's autoload map. This file:
  *
- *   - registers a PSR-4 autoloader mapping Vctrs\Plugins\VendorManager\ → VM_SRC/src
+ *   - registers a PSR-4 autoloader mapping Vctrs\Plugins\VbVendorManager\ → VM_SRC/src
  *     (for unit / job tests that reference plugin classes without installing it);
  *   - provides vmRunMigrations() to create the plugin tables directly (unit tests);
  *   - provides vmBindTenant() to bind a TenantContext;
@@ -38,7 +38,7 @@ if (! defined('VM_AUTOLOAD_REGISTERED')) {
     define('VM_AUTOLOAD_REGISTERED', true);
 
     spl_autoload_register(static function (string $class): void {
-        $prefix = 'Vctrs\\Plugins\\VendorManager\\';
+        $prefix = 'Vctrs\\Plugins\\VbVendorManager\\';
         if (! str_starts_with($class, $prefix)) {
             return;
         }

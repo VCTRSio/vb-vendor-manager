@@ -8,7 +8,7 @@
   "visibility": "first_party",
   "status": "published",
   "enabledByDefault": false,
-  "provider": "Vctrs\\Plugins\\VendorManager\\VendorManagerServiceProvider",
+  "provider": "Vctrs\\Plugins\\VbVendorManager\\VendorManagerServiceProvider",
   "engines": { "vctrbase": "^1.0.0" },
   "uiMode": "module",
   "ui": {

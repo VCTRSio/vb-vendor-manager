@@ -2,8 +2,8 @@
 
 use App\Plugins\PluginManifest;
 use App\Support\TenantContext;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
-use Vctrs\Plugins\VendorManager\VendorManagerServiceProvider;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\VendorManagerServiceProvider;
 
 require_once __DIR__.'/vm_bootstrap.php';
 
@@ -87,8 +87,8 @@ it('relativeTime helper produces core-compatible buckets', function () {
 
 it('expiringDocuments widget counts documents inside the 60-day window', function () {
     $vendor = VendorProfile::create(['company_name' => 'A', 'category' => 'oem', 'status' => 'active']);
-    \Vctrs\Plugins\VendorManager\Models\VendorDocument::create(['vendor_id' => $vendor->id, 'document_type' => 'coi', 'expires_at' => now()->addDays(30)]);
-    \Vctrs\Plugins\VendorManager\Models\VendorDocument::create(['vendor_id' => $vendor->id, 'document_type' => 'coi', 'expires_at' => now()->addDays(90)]);
+    \Vctrs\Plugins\VbVendorManager\Models\VendorDocument::create(['vendor_id' => $vendor->id, 'document_type' => 'coi', 'expires_at' => now()->addDays(30)]);
+    \Vctrs\Plugins\VbVendorManager\Models\VendorDocument::create(['vendor_id' => $vendor->id, 'document_type' => 'coi', 'expires_at' => now()->addDays(90)]);
 
     $widget = vendorManagerProvider()->widgets()['vendor.expiringDocuments'][1]();
 

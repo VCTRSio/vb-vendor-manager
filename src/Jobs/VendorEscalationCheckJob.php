@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Vctrs\Plugins\VendorManager\Jobs;
+namespace Vctrs\Plugins\VbVendorManager\Jobs;
 
 use App\Events\FeedEventRequested;
 use App\Plugins\Scheduling\PluginScheduledJob;
 use App\Support\TenantContext;
-use Vctrs\Plugins\VendorManager\Models\VendorDocument;
+use Vctrs\Plugins\VbVendorManager\Models\VendorDocument;
 
 final class VendorEscalationCheckJob extends PluginScheduledJob
 {

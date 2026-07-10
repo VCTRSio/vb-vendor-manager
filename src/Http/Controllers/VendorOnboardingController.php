@@ -1,14 +1,14 @@
 <?php
 
-namespace Vctrs\Plugins\VendorManager\Http\Controllers;
+namespace Vctrs\Plugins\VbVendorManager\Http\Controllers;
 
 use App\Events\FeedEventRequested;
 use App\Http\Controllers\Controller;
 use App\Support\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vctrs\Plugins\VendorManager\Models\VendorOnboarding;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Models\VendorOnboarding;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 
 class VendorOnboardingController extends Controller
 {

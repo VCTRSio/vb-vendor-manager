@@ -2,8 +2,8 @@
 
 use App\Models\AuditEvent;
 use App\Support\TenantContext;
-use Vctrs\Plugins\VendorManager\Models\VendorDocument;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Models\VendorDocument;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 
 require_once __DIR__.'/vm_bootstrap.php';
 

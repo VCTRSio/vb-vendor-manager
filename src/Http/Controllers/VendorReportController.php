@@ -1,11 +1,11 @@
 <?php
 
-namespace Vctrs\Plugins\VendorManager\Http\Controllers;
+namespace Vctrs\Plugins\VbVendorManager\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 
 class VendorReportController extends Controller
 {

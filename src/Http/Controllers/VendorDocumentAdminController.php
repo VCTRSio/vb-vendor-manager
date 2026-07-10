@@ -1,9 +1,9 @@
 <?php
 
-namespace Vctrs\Plugins\VendorManager\Http\Controllers;
+namespace Vctrs\Plugins\VbVendorManager\Http\Controllers;
 
 use App\Plugins\Admin\PluginAdminController;
-use Vctrs\Plugins\VendorManager\Models\VendorDocument;
+use Vctrs\Plugins\VbVendorManager\Models\VendorDocument;
 
 class VendorDocumentAdminController extends PluginAdminController
 {

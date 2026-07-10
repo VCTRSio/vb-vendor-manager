@@ -52,6 +52,17 @@ rm -rf "$DEST"
 mkdir -p "$DEST"
 cp -R "$PLUGIN/tests/." "$DEST/"
 
+# Remove the in-tree vendor-manager plugin from the throwaway worktree.
+# This plugin (a) still uses the DIFFERENT namespace Vctrs\Plugins\VendorManager
+# (so no autoload collision) but (b) its manifest declares nav key `vendor` +
+# route `/dashboard/vendor`, which collide with the adapted VendorManagerTest's
+# assertions when the uploaded plugin is installed in-process. Removing it keeps
+# the harness reproducible (the worktree is a throwaway test mount).
+if [ -d "$WT/plugins/vendor-manager" ]; then
+  echo ">> removing in-tree plugins/vendor-manager from worktree ($WT)"
+  rm -rf "$WT/plugins/vendor-manager"
+fi
+
 cd "$MAIN"
 
 echo ">> restoring $DB from the schema dump (shared postgres, private DB)…"

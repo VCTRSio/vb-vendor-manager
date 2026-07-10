@@ -4,8 +4,8 @@ use App\Models\AuditEvent;
 use App\Support\TenantContext;
 use Illuminate\Support\Facades\Event;
 use App\Events\FeedEventRequested;
-use Vctrs\Plugins\VendorManager\Models\VendorOnboarding;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Models\VendorOnboarding;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 
 require_once __DIR__.'/vm_bootstrap.php';
 

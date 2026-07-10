@@ -1,14 +1,14 @@
 <?php
 
-namespace Vctrs\Plugins\VendorManager\Http\Controllers;
+namespace Vctrs\Plugins\VbVendorManager\Http\Controllers;
 
 use App\Audit\AuditContext;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Vctrs\Plugins\VendorManager\Models\VendorCredential;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Models\VendorCredential;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 
 class VendorCredentialController extends Controller
 {

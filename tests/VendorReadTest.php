@@ -1,8 +1,8 @@
 <?php
 
 use App\Support\TenantContext;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
-use Vctrs\Plugins\VendorManager\Services\VendorService;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Services\VendorService;
 
 require_once __DIR__.'/vm_bootstrap.php';
 

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Vctrs\Plugins\VendorManager\Jobs;
+namespace Vctrs\Plugins\VbVendorManager\Jobs;
 
 use App\Events\FeedEventRequested;
 use App\Events\TaskRequested;
 use App\Plugins\Scheduling\PluginScheduledJob;
 use App\Support\TenantContext;
-use Vctrs\Plugins\VendorManager\Models\VendorCredential;
-use Vctrs\Plugins\VendorManager\Models\VendorDocument;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
-use Vctrs\Plugins\VendorManager\Services\VendorService;
+use Vctrs\Plugins\VbVendorManager\Models\VendorCredential;
+use Vctrs\Plugins\VbVendorManager\Models\VendorDocument;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Services\VendorService;
 
 final class VendorExpiryCheckJob extends PluginScheduledJob
 {

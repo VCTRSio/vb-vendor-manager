@@ -4,7 +4,7 @@ use App\Audit\AuditableRegistry;
 use App\Plugins\Contracts\AdminManageableModel;
 use App\Plugins\PluginModel;
 use Illuminate\Support\Str;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 
 require_once __DIR__.'/vm_bootstrap.php';
 

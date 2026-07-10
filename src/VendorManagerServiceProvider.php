@@ -1,17 +1,17 @@
 <?php
 
-namespace Vctrs\Plugins\VendorManager;
+namespace Vctrs\Plugins\VbVendorManager;
 
 use App\Audit\AuditableRegistry;
 use App\Plugins\Contracts\PluginModule;
 use App\Plugins\Contracts\ProvidesScheduledTasks;
 use App\Plugins\PluginManifest;
 use Illuminate\Support\Facades\Route;
-use Vctrs\Plugins\VendorManager\Jobs\VendorEscalationCheckJob;
-use Vctrs\Plugins\VendorManager\Jobs\VendorExpiryCheckJob;
-use Vctrs\Plugins\VendorManager\Models\VendorCredential;
-use Vctrs\Plugins\VendorManager\Models\VendorDocument;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Jobs\VendorEscalationCheckJob;
+use Vctrs\Plugins\VbVendorManager\Jobs\VendorExpiryCheckJob;
+use Vctrs\Plugins\VbVendorManager\Models\VendorCredential;
+use Vctrs\Plugins\VbVendorManager\Models\VendorDocument;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 
 class VendorManagerServiceProvider implements PluginModule, ProvidesScheduledTasks
 {

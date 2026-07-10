@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Vctrs\Plugins\VendorManager\Services;
+namespace Vctrs\Plugins\VbVendorManager\Services;
 
 use App\Events\FeedEventRequested;
 use App\Plugins\PluginSettings;
 use Illuminate\Support\Facades\DB;
-use Vctrs\Plugins\VendorManager\Models\VendorDocument;
-use Vctrs\Plugins\VendorManager\Models\VendorOnboarding;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Models\VendorDocument;
+use Vctrs\Plugins\VbVendorManager\Models\VendorOnboarding;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 
 class VendorService
 {

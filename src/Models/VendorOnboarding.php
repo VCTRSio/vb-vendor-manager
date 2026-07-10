@@ -1,6 +1,6 @@
 <?php
 
-namespace Vctrs\Plugins\VendorManager\Models;
+namespace Vctrs\Plugins\VbVendorManager\Models;
 
 use App\Plugins\PluginModel;
 

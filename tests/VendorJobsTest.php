@@ -4,11 +4,11 @@ use App\Events\FeedEventRequested;
 use App\Events\TaskRequested;
 use App\Support\TenantContext;
 use Illuminate\Support\Facades\Event;
-use Vctrs\Plugins\VendorManager\Jobs\VendorEscalationCheckJob;
-use Vctrs\Plugins\VendorManager\Jobs\VendorExpiryCheckJob;
-use Vctrs\Plugins\VendorManager\Models\VendorCredential;
-use Vctrs\Plugins\VendorManager\Models\VendorDocument;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Jobs\VendorEscalationCheckJob;
+use Vctrs\Plugins\VbVendorManager\Jobs\VendorExpiryCheckJob;
+use Vctrs\Plugins\VbVendorManager\Models\VendorCredential;
+use Vctrs\Plugins\VbVendorManager\Models\VendorDocument;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 
 require_once __DIR__.'/vm_bootstrap.php';
 

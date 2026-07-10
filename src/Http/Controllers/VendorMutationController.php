@@ -1,14 +1,14 @@
 <?php
 
-namespace Vctrs\Plugins\VendorManager\Http\Controllers;
+namespace Vctrs\Plugins\VbVendorManager\Http\Controllers;
 
 use App\Audit\AuditContext;
 use App\Http\Controllers\Controller;
 use App\Support\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Vctrs\Plugins\VendorManager\Models\VendorProfile;
-use Vctrs\Plugins\VendorManager\Services\VendorService;
+use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
+use Vctrs\Plugins\VbVendorManager\Services\VendorService;
 
 class VendorMutationController extends Controller
 {
