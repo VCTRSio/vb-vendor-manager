@@ -99,6 +99,45 @@ control).
 | `vendor-manager/expiry-check` | `0 8 * * *` | Daily COI/contract/credential expiry alerts — Tasks + Feed |
 | `vendor-manager/escalation-check` | `0 9 * * *` | Daily escalation of <7d unresolved expiries to Feed |
 
+## Channels soft-dependency (revisit)
+
+On the `approved` onboarding step, `VendorOnboardingController::advance()` mirrors
+the Next.js core's `getOrCreateVendorChannel`: when the active tenant is a rooftop
+it **best-effort** get-or-creates the vendor's private channel (`slug
+vendor-<first-8-of-vendor-id>`) and, on first creation, seeds an owner member and a
+welcome message. This is a **new soft (optional) dependency on the `channels`
+plugin**:
+
+- The whole block is guarded by `class_exists('Vctrs\Plugins\Channels\Models\Channel')`
+  and references the channels models only via fully-qualified **string** class names,
+  so there is no compile-time coupling (and PHPStan stays quiet).
+- It is wrapped in `try/catch (\Throwable) { report($e); }` — faithful to core, a
+  channel failure must **never** block onboarding. If `channels` is not installed the
+  block is simply a no-op and the vendor is still activated.
+
+**Revisit:** the clean fix is for the `channels` plugin to export a
+`ChannelDirectory::getOrCreateVendorChannel(tenantType, tenantId, vendorId)`
+singleton (mirroring `StaffDirectory`), which would let this controller drop the
+string-class coupling and depend on a real contract instead. Tracked in
+`docs/superpowers/core-flags-vendor-manager.md` in the core repo. Because `channels`
+is absent from the standalone test harness, the channel-create path is a documented
+cross-plugin coverage gap (the graceful no-op path IS covered — see
+`tests/VendorOnboardingTest.php`).
+
+## Migrations & upgrades
+
+The five genesis migrations in `database/migrations/` each open with an
+`if (Schema::hasTable('<table>')) return;` **adopt-existing** guard. This makes
+first-install idempotent and lets a host that already owns the vendor tables (e.g.
+one that previously ran the in-monorepo `plugins/vendor-manager`) **adopt** them —
+data preserved — rather than dropping and recreating. Both paths are proven by
+`tests/VendorMigrationsTest.php` (fresh-create + adopt).
+
+**Upgrade policy:** never mutate a genesis migration to evolve the schema — a host
+that already has the table would skip the change entirely. Ship every future schema
+change as a **new, additive, dated migration**, each independently idempotent (e.g.
+`if (Schema::hasColumn(...)) return;`), so fresh and existing hosts converge.
+
 ## License
 
 AGPLv3 with a plugin-API exception, mirroring the VCTRbase platform license — see

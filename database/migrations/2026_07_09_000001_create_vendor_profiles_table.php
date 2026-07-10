@@ -9,6 +9,16 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Genesis idempotency guard (adopt-existing): when the host already owns this
+        // table (e.g. it previously ran the in-monorepo vendor-manager, or the plugin is
+        // being reinstalled) we ADOPT the incumbent table and its data instead of
+        // recreating it. This guard is for FIRST-INSTALL idempotency ONLY.
+        //
+        // UPGRADE POLICY: never mutate this genesis file to evolve the schema — a host
+        // that already has the table would skip the change entirely. Future schema
+        // changes ship as NEW, additive, dated migrations (each independently idempotent,
+        // e.g. `if (Schema::hasColumn(...)) return;`), so both fresh and existing hosts
+        // converge. Proven by tests/VendorMigrationsTest.php (fresh-create + adopt paths).
         if (Schema::hasTable('vendor_profiles')) {
             return;
         }

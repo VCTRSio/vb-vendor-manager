@@ -13,6 +13,10 @@ beforeEach(function () {
 });
 
 it('advances onboarding to approved and activates the vendor', function () {
+    // Also proves the CHANNELS-ABSENT graceful path: the channels plugin is not
+    // installed in the standalone harness, so the best-effort channel auto-create in
+    // advance() is a no-op (its class_exists guard is false). Approval must still
+    // succeed — record created, status flipped to 'active', no exception thrown.
     $this->actingAs(pluginTestUser('rooftop_owner'))
         ->postJson("/dashboard/vendor/api/{$this->vendor->id}/onboarding", ['step' => 'approved', 'notes' => 'ok'])
         ->assertOk()->assertJsonPath('data.step', 'approved');
