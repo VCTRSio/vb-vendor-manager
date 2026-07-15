@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private const T = 'vendor_profiles';
+
     public function up(): void
     {
         // Genesis idempotency guard (adopt-existing): when the host already owns this
@@ -19,10 +21,20 @@ return new class extends Migration
         // changes ship as NEW, additive, dated migrations (each independently idempotent,
         // e.g. `if (Schema::hasColumn(...)) return;`), so both fresh and existing hosts
         // converge. Proven by tests/VendorMigrationsTest.php (fresh-create + adopt paths).
-        if (Schema::hasTable('vendor_profiles')) {
-            return;
+        //
+        // RLS is applied OUTSIDE this guard (see $this->applyRls() at the end of up()):
+        // a clean external install is never swept by core's enforce_real_rls migration,
+        // and an ADOPTED table (early-return path) must still receive the fail-closed
+        // policy — otherwise, post-#6, app_user reads/writes every tenant's rows.
+        if (! Schema::hasTable(self::T)) {
+            $this->createTable();
         }
 
+        $this->applyRls();
+    }
+
+    private function createTable(): void
+    {
         Schema::create('vendor_profiles', function (Blueprint $table) {
             $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
             $table->string('tenant_type');
@@ -67,8 +79,42 @@ return new class extends Migration
         DB::statement('CREATE UNIQUE INDEX IF NOT EXISTS vendor_profiles_api_key_hash_unique ON vendor_profiles (api_key_hash) WHERE (api_key_hash IS NOT NULL)');
     }
 
+    /**
+     * Fail-closed tenant RLS, reproduced VERBATIM from core's enforce_real_rls. Runs
+     * whether the table was just created or adopted (idempotent: ENABLE is a no-op if
+     * already enabled, DROP POLICY IF EXISTS + CREATE POLICY re-asserts the predicate,
+     * FORCE is idempotent). The predicate casts (tenant_type)::text so it is agnostic
+     * to the enum→string divergence. Migrations run as the DB owner (superuser), which
+     * can create policies + FORCE; the self-grant covers a host whose app_user role
+     * predates ALTER DEFAULT PRIVILEGES.
+     */
+    private function applyRls(): void
+    {
+        $t = self::T;
+        $predicate = <<<'SQL'
+            current_setting('app.bypass_rls', true) = '1'
+            OR ( (tenant_type)::text = current_setting('app.tenant_type', true)
+                 AND (tenant_id)::text = NULLIF(current_setting('app.tenant_id', true), '') )
+        SQL;
+        DB::unprepared("ALTER TABLE public.{$t} ENABLE ROW LEVEL SECURITY;");
+        DB::unprepared("DROP POLICY IF EXISTS {$t}_tenant_isolation ON public.{$t};");
+        DB::unprepared("CREATE POLICY {$t}_tenant_isolation ON public.{$t} USING ({$predicate});");
+        DB::unprepared("ALTER TABLE public.{$t} FORCE ROW LEVEL SECURITY;");
+        DB::unprepared(<<<SQL
+            DO \$\$ BEGIN
+              IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'app_user') THEN
+                EXECUTE 'GRANT SELECT, INSERT, UPDATE, DELETE ON public.{$t} TO app_user';
+                EXECUTE 'GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO app_user';
+              END IF;
+            END \$\$;
+        SQL);
+    }
+
     public function down(): void
     {
-        Schema::dropIfExists('vendor_profiles');
+        $t = self::T;
+        DB::unprepared("ALTER TABLE public.{$t} NO FORCE ROW LEVEL SECURITY;");
+        DB::unprepared("DROP POLICY IF EXISTS {$t}_tenant_isolation ON public.{$t};");
+        Schema::dropIfExists(self::T);
     }
 };
