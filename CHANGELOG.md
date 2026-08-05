@@ -2,6 +2,45 @@
 
 All notable changes to Vendor Manager are documented here.
 
+## [1.1.0] - 2026-08-04
+
+Cross-plugin linking (Expand pass). All additive, zero core changes.
+
+### Added
+- **Vault evidence on documents and credentials.** The two `vault_document_id`
+  pointers are now live links to the host vault. A picker route
+  (`GET dashboard/vendor/api/vault-documents`) lists eligible vault documents; adding a
+  document or credential with a `vaultDocumentId` writes a `source → vault.document`
+  `evidence` entity-reference edge (create + edge in one transaction); new
+  `PATCH .../documents/{id}/evidence` and `PATCH .../credentials/{id}/evidence` endpoints
+  link, re-point, and clear the evidence (column update + edge reconcile in one
+  transaction). The detail read resolves each row's linked certificate
+  (`{title, current_version, …}`) live. The vault seam is optional — every path degrades
+  to an empty list / null when the vault plugin is not installed.
+- **Staff account-rep assignment.** A new nullable `account_rep_employee_id` column
+  (additive, idempotent migration; no cross-plugin foreign key) plus
+  `PUT dashboard/vendor/api/{vendorId}/account-rep` and a staff picker
+  (`GET dashboard/vendor/api/assignable-staff`). Assigning a rep sets the column and
+  reconciles a `profile → staff.employee` `account_rep` edge in one transaction; the
+  rep's display name is resolved live from the staff-hub directory at read time (no cached
+  name → no drift). The staff seam is optional and degrades to empty / null.
+- **`VendorDirectory` PII-free read seam** (`Vctrs\Plugins\VbVendorManager\VendorDirectory`,
+  singleton-bound) — `lookup()` and `listActive()` for other plugins/core, projecting only
+  `id, company_name, category, status, has_active_contract, coi_expiry_date` (deliberately
+  narrower than `SAFE_FIELDS`; never exposes contact email/phone/notes), tenant-scoped and
+  soft-delete-aware, returning plain arrays.
+- **Detail-view UI:** per-row vault-evidence pickers on documents and credentials, a
+  header account-rep picker, and inline display of the resolved certificate and rep.
+
+### Changed
+- **Vendor-approval channel creation now consumes the host `ChannelDirectory` seam.**
+  `VendorOnboardingController` previously hand-duplicated the channels plugin's
+  create-or-get + member + welcome-message logic; it now calls
+  `ChannelDirectory::getOrCreateVendorChannel` (the exact seam the channels plugin
+  exports), guarded by `class_exists` + try/catch so a missing channels plugin still never
+  blocks onboarding. No behavior change — the hand-rolled block was removed, not left
+  alongside.
+
 ## [1.0.2] - 2026-07-14
 
 ### Security

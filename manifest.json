@@ -2,7 +2,7 @@
   "id": "vb-vendor-manager",
   "slug": "vb-vendor-manager",
   "name": "Vendor Manager",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Vendor directory, onboarding workflow, documents, credentials, and compliance settings.",
   "author": "Angus Fox",
   "visibility": "first_party",
