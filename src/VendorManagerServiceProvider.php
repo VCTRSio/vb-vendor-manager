@@ -79,6 +79,7 @@ class VendorManagerServiceProvider implements PluginModule, ProvidesScheduledTas
         AuditableRegistry::register(VendorProfile::class);
         AuditableRegistry::register(VendorDocument::class);
         AuditableRegistry::register(VendorCredential::class);
+        app()->singleton(VendorDirectory::class, fn () => new VendorDirectory);
         Route::group([], $this->dir.'/src/routes.php');
     }
 
