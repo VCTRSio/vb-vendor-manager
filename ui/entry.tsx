@@ -18,6 +18,35 @@ async function getJson<T>(url: string): Promise<T> {
   return body.data as T;
 }
 
+// Laravel encrypts the CSRF token into the XSRF-TOKEN cookie and expects it echoed back
+// (url-decoded) in the X-XSRF-TOKEN header — this is exactly what axios does automatically
+// for the vendored @vctrs/plugin-ui client kit the sibling extracted plugins use
+// (see vb-warranty-recall/ui/entry.tsx). This file hand-rolls fetch, so we replicate it.
+function readCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// Mutating counterpart to getJson: same session-cookie auth + Accept/X-Requested-With, plus
+// a JSON body and the X-XSRF-TOKEN header the `web` middleware requires for PATCH/PUT.
+async function sendJson<T>(url: string, method: 'PATCH' | 'PUT', body: unknown): Promise<T> {
+  const xsrf = readCookie('XSRF-TOKEN');
+  const res = await fetch(url, {
+    method,
+    credentials: 'same-origin',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      ...(xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`${res.status} ${url}`);
+  const b = await res.json();
+  return b.data as T;
+}
+
 // STATUS_VARIANT reconciled from the source Vendor/Index.tsx badge map, extended
 // to cover the statuses the API actually emits (pending|active|inactive|rejected).
 const STATUS_VARIANT: Record<string, string> = {
@@ -212,9 +241,55 @@ const plugin: PluginModule = {
       );
     }
 
+    // Per-row vault-evidence picker + resolved-evidence affordance, shared by the
+    // Documents and Credentials sections. The DISPLAY (it.evidence) is independent of
+    // the picker; the <select> only renders when the vault seam returned candidates.
+    function EvidenceControls({ it, kind, vaultDocs, onLinked }: { it: any; kind: 'documents' | 'credentials'; vaultDocs: any[]; onLinked: () => void }) {
+      const typeLabel = kind === 'documents' ? it.document_type : it.credential_type;
+      const children: any[] = [
+        R.createElement('span', { key: 'type', style: { fontSize: 12, opacity: 0.7 } }, typeLabel),
+      ];
+      if (it.evidence) {
+        children.push(
+          R.createElement(
+            'span',
+            { key: 'cert', 'data-testid': 'vm-evidence', style: { fontSize: 12, opacity: 0.85 } },
+            `Certificate: ${it.evidence.title} (v${it.evidence.current_version})`,
+          ),
+        );
+      }
+      if (vaultDocs.length > 0) {
+        children.push(
+          R.createElement(
+            'select',
+            {
+              key: 'picker',
+              'data-testid': `vm-vault-picker-${kind}`,
+              value: it.vault_document_id ?? '',
+              style: { fontSize: 12 },
+              onChange: (e: any) => {
+                const val = e.target.value;
+                sendJson(`${BASE}/${kind}/${it.id}/evidence`, 'PATCH', { vaultDocumentId: val || null })
+                  .then(onLinked)
+                  .catch(() => {});
+              },
+            },
+            R.createElement('option', { key: '', value: '' }, '— no evidence —'),
+            vaultDocs.map((vd: any) =>
+              R.createElement('option', { key: vd.id, value: vd.id }, `${vd.title} (v${vd.current_version})`),
+            ),
+          ),
+        );
+      }
+      return R.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } }, children);
+    }
+
     function DetailView({ id, onBack }: { id: string; onBack: () => void }) {
       const [data, setData] = R.useState<any>(null);
       const [error, setError] = R.useState<string | null>(null);
+      const [reload, setReload] = R.useState(0);
+      const [vaultDocs, setVaultDocs] = R.useState<any[]>([]);
+      const [staff, setStaff] = R.useState<any[]>([]);
       R.useEffect(() => {
         let alive = true;
         getJson<any>(`${BASE}/${id}`)
@@ -223,7 +298,24 @@ const plugin: PluginModule = {
         return () => {
           alive = false;
         };
+      }, [id, reload]);
+
+      // Picker candidate lists — fetched once. Both seams degrade to an empty array when
+      // their host plugin is absent, in which case the corresponding picker stays hidden.
+      R.useEffect(() => {
+        let alive = true;
+        getJson<{ documents: any[] }>(`${BASE}/vault-documents`)
+          .then((d) => alive && setVaultDocs(d?.documents ?? []))
+          .catch(() => alive && setVaultDocs([]));
+        getJson<{ employees: any[] }>(`${BASE}/assignable-staff`)
+          .then((d) => alive && setStaff(d?.employees ?? []))
+          .catch(() => alive && setStaff([]));
+        return () => {
+          alive = false;
+        };
       }, [id]);
+
+      const bump = () => setReload((n) => n + 1);
 
       const vendor = data?.vendor;
       const documents = data?.documents ?? [];
@@ -254,7 +346,30 @@ const plugin: PluginModule = {
                 `${vendor.category ?? 'Uncategorized'} · ${vendor.contact_name ?? 'No contact'}`,
               ),
             ),
-            R.createElement(Badge, { variant: STATUS_VARIANT[vendor.status] ?? 'default', style: { textTransform: 'capitalize' } }, vendor.status),
+            R.createElement(
+              'div',
+              { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 } },
+              R.createElement(Badge, { variant: STATUS_VARIANT[vendor.status] ?? 'default', style: { textTransform: 'capitalize' } }, vendor.status),
+              data.accountRep &&
+                R.createElement('span', { 'data-testid': 'vm-rep', style: { fontSize: 12, opacity: 0.85 } }, `Rep: ${data.accountRep.display_name}`),
+              staff.length > 0 &&
+                R.createElement(
+                  'select',
+                  {
+                    'data-testid': 'vm-rep-picker',
+                    value: vendor.account_rep_employee_id ?? '',
+                    style: { fontSize: 12 },
+                    onChange: (e: any) => {
+                      const val = e.target.value;
+                      sendJson(`${BASE}/${id}/account-rep`, 'PUT', { employeeId: val || null })
+                        .then(bump)
+                        .catch(() => {});
+                    },
+                  },
+                  R.createElement('option', { key: '', value: '' }, '— unassigned —'),
+                  staff.map((s: any) => R.createElement('option', { key: s.id, value: s.id }, s.display_name)),
+                ),
+            ),
           ),
         data &&
           R.createElement(
@@ -279,7 +394,7 @@ const plugin: PluginModule = {
                 R.createElement(DetailRow, {
                   key: c.id,
                   label: c.label ?? c.credential_type ?? 'Credential',
-                  meta: R.createElement('span', { style: { fontSize: 12, opacity: 0.7 } }, c.credential_type),
+                  meta: R.createElement(EvidenceControls, { it: c, kind: 'credentials', vaultDocs, onLinked: bump }),
                 }),
             }),
             R.createElement(DetailSection, {
@@ -290,7 +405,7 @@ const plugin: PluginModule = {
                 R.createElement(DetailRow, {
                   key: d.id,
                   label: d.file_name ?? d.document_type ?? 'Document',
-                  meta: R.createElement('span', { style: { fontSize: 12, opacity: 0.7 } }, d.document_type),
+                  meta: R.createElement(EvidenceControls, { it: d, kind: 'documents', vaultDocs, onLinked: bump }),
                 }),
             }),
           ),
