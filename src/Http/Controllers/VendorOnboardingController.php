@@ -39,73 +39,22 @@ class VendorOnboardingController extends Controller
             VendorProfile::query()->whereKey($vendor->id)->update(['status' => $newStatus, 'updated_at' => now()]);
         }
 
-        // Channel auto-create on approval (best-effort) — mirrors the Next.js core's
-        // getOrCreateVendorChannel: when a vendor is approved and the ACTIVE tenant is a
-        // rooftop, get-or-create the vendor's private channel and (on first creation) seed
-        // an owner member + a welcome message. This is a NEW SOFT/DIRECT dependency on the
-        // channels plugin — REVISIT: the clean fix is a
-        // `ChannelDirectory::getOrCreateVendorChannel(...)` singleton exported by the
-        // channels plugin (mirroring StaffDirectory), which would remove the string-class
-        // coupling below (see docs/superpowers/core-flags-vendor-manager.md in the core
-        // repo + the "Channels soft-dependency (revisit)" note in this plugin's README).
-        //
-        // The block is fully guarded: it only runs when the channels plugin is installed
-        // (class_exists) and references the channels classes ONLY via fully-qualified string
-        // names, so there is no compile-time coupling and PHPStan stays quiet. Everything is
-        // wrapped in try/catch — faithful to core, a channel failure must NEVER block
-        // onboarding. In the standalone test harness the channels plugin is absent, so
-        // class_exists() is false and this is a no-op (documented cross-plugin coverage gap).
+        // Vendor-approval channel (best-effort). The host channels plugin exports
+        // ChannelDirectory::getOrCreateVendorChannel — the exact seam this plugin's
+        // README asked for — so we consume it via late-bound class name (no compile-time
+        // coupling, PHPStan stays quiet) instead of hand-duplicating the Channel/member/
+        // welcome-message writes. Guarded: only when channels is installed and the active
+        // tenant is a rooftop; wrapped in try/catch so a channel failure never blocks
+        // onboarding.
         if ($v['step'] === 'approved' && $ctx->activeTenantType() === 'rooftop'
-            && class_exists('Vctrs\\Plugins\\Channels\\Models\\Channel')) {
+            && class_exists('Vctrs\\Plugins\\Channels\\ChannelDirectory')) {
             try {
-                $channelClass = 'Vctrs\\Plugins\\Channels\\Models\\Channel';
-                $channelMemberClass = 'Vctrs\\Plugins\\Channels\\Models\\ChannelMember';
-                $channelMessageClass = 'Vctrs\\Plugins\\Channels\\Models\\ChannelMessage';
-
-                $rooftopId = $ctx->activeTenantId();
-                $slug = 'vendor-'.substr((string) $vendor->id, 0, 8);
-
-                $channel = $channelClass::query()
-                    ->where('tenant_type', 'rooftop')
-                    ->where('tenant_id', $rooftopId)
-                    ->where('slug', $slug)
-                    ->first();
-
-                if ($channel === null) {
-                    $channel = $channelClass::create([
-                        'tenant_type' => 'rooftop',
-                        'tenant_id' => $rooftopId,
-                        'slug' => $slug,
-                        'name' => $vendor->company_name,
-                        'description' => 'Private channel between the store and '.$vendor->company_name.'.',
-                        'kind' => 'vendor',
-                        'icon_key' => 'lock',
-                        'vendor_id' => $vendor->id,
-                        'created_by' => $uid !== '' ? $uid : null,
-                    ]);
-
-                    // Newly created: add the creator as an owner member (firstOrCreate so a
-                    // duplicate is harmless) and seed a single welcome message. Core seeds the
-                    // member + welcome ONLY in the create branch, so we do the same here.
-                    // Core also seeds the member only when a real creator exists
-                    // (`if (opts.createdBy)`); TenantContext::userId() is '' in system/API-key
-                    // contexts, so mirror that guard for exact parity.
-                    if ($uid !== '') {
-                        $channelMemberClass::firstOrCreate(
-                            ['channel_id' => $channel->id, 'user_id' => $uid],
-                            ['role' => 'owner'],
-                        );
-                    }
-
-                    $channelMessageClass::create([
-                        'channel_id' => $channel->id,
-                        'tenant_type' => 'rooftop',
-                        'tenant_id' => $rooftopId,
-                        'author_user_id' => null,
-                        'source_plugin' => 'vendor-manager',
-                        'body' => '🤝 This channel is between the store and **'.$vendor->company_name.'**. Use it for compliance docs, scheduling, and day-to-day coordination. Anyone in the channel can post; archived messages stay in the audit trail.',
-                    ]);
-                }
+                app('Vctrs\\Plugins\\Channels\\ChannelDirectory')->getOrCreateVendorChannel(
+                    $ctx->activeTenantId(),
+                    (string) $vendor->id,
+                    (string) $vendor->company_name,
+                    $uid !== '' ? $uid : null,
+                );
             } catch (\Throwable $e) {
                 report($e);
             }

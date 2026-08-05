@@ -160,6 +160,16 @@ if (! function_exists('vmInstallSignedAndBoot')) {
         $mgr->refresh();
         app(PluginMigrator::class)->migrate('vb-vendor-manager');
         $mgr->bootProviders();
+
+        // ENABLE-GATE ACTIVATION. The manifest is enabledByDefault:false (paid,
+        // opt-in), so installFromZip records the tenant install with activated=false.
+        // Core's EnsurePluginEnabled gate is attached to this plugin's tenant-scoped
+        // routes and fail-closes on a non-activated install (403 "not enabled for
+        // this tenant"), which would block every gated feature test. Explicitly
+        // activate here — the harness equivalent of an owner switching the paid
+        // plugin on. Firewall-safe: this is plugin-repo test infrastructure; no core
+        // (../../vctrbase-php) files are touched.
+        app(\App\Plugins\PluginLifecycle::class)->enable('vb-vendor-manager');
     }
 }
 
