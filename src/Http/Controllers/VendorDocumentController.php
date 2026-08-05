@@ -9,12 +9,18 @@ use App\Support\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Vctrs\Plugins\Vault\VaultDirectory;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\Concerns\ResolvesVaultEvidence;
 use Vctrs\Plugins\VbVendorManager\Models\VendorDocument;
 use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 use Vctrs\Plugins\VbVendorManager\Services\VendorService;
+use Vctrs\Plugins\VbVendorManager\Support\VendorRelation;
 
 class VendorDocumentController extends Controller
 {
+    use ResolvesVaultEvidence;
+
     public function __construct(private readonly VendorService $vendors) {}
 
     public function add(Request $request, string $vendorId): JsonResponse
@@ -29,18 +35,26 @@ class VendorDocumentController extends Controller
         $vendor = VendorProfile::query()->whereNull('deleted_at')->findOrFail($vendorId);
         $uid = app(TenantContext::class)->userId();
 
+        $ctx = app(TenantContext::class);
+
         // Tag BEFORE the create so the doc-create audit row gets procedure document.add.
         // The COI-sync / W9 profile updates below are mass ->update() calls (no model
         // events), so they cannot consume the tag.
-        AuditContext::tag('document.add');
-        $doc = VendorDocument::create([
-            'vendor_id' => $vendor->id,
-            'document_type' => $v['documentType'],
-            'document_name' => $v['documentName'] ?? null,
-            'vault_document_id' => $v['vaultDocumentId'] ?? null,
-            'expires_at' => ! empty($v['expiresAt']) ? Carbon::parse($v['expiresAt']) : null,
-            'uploaded_by' => $uid,
-        ]);
+        $doc = DB::transaction(function () use ($vendor, $v, $uid, $ctx) {
+            AuditContext::tag('document.add');
+            $doc = VendorDocument::create([
+                'vendor_id' => $vendor->id,
+                'document_type' => $v['documentType'],
+                'document_name' => $v['documentName'] ?? null,
+                'vault_document_id' => $v['vaultDocumentId'] ?? null,
+                'expires_at' => ! empty($v['expiresAt']) ? Carbon::parse($v['expiresAt']) : null,
+                'uploaded_by' => $uid,
+            ]);
+
+            $this->reconcileEvidenceEdge($ctx, VendorRelation::DOC_SOURCE_TYPE, (string) $doc->id, null, $v['vaultDocumentId'] ?? null);
+
+            return $doc;
+        });
 
         if ($v['documentType'] === 'coi' && ! empty($v['expiresAt'])) {
             $this->vendors->syncCoiExpiry($vendor->id);
@@ -80,6 +94,33 @@ class VendorDocumentController extends Controller
         }
 
         return response()->json(['data' => ['documents' => $q->orderByDesc('created_at')->get()]]);
+    }
+
+    public function vaultDocuments(): JsonResponse
+    {
+        if (! $this->vaultDirectoryAvailable()) {
+            return response()->json(['data' => ['documents' => []]]);
+        }
+        $ctx = app(TenantContext::class);
+        $docs = app(VaultDirectory::class)->eligibleDocuments($ctx->activeTenantType(), $ctx->activeTenantId());
+
+        return response()->json(['data' => ['documents' => $docs]]);
+    }
+
+    public function setEvidence(Request $request, string $id): JsonResponse
+    {
+        $v = $request->validate(['vaultDocumentId' => ['nullable', 'uuid']]);
+        $doc = VendorDocument::query()->findOrFail($id);
+        $ctx = app(TenantContext::class);
+        $previous = $doc->vault_document_id;
+        $new = $v['vaultDocumentId'] ?? null;
+
+        DB::transaction(function () use ($doc, $new, $ctx, $previous) {
+            $doc->update(['vault_document_id' => $new]);
+            $this->reconcileEvidenceEdge($ctx, VendorRelation::DOC_SOURCE_TYPE, (string) $doc->id, $previous, $new);
+        });
+
+        return response()->json(['data' => ['document' => $doc->fresh(), 'evidence' => $this->resolveEvidence($new, $ctx)]]);
     }
 
     public function remove(string $id): JsonResponse

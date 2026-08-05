@@ -41,6 +41,13 @@ Route::middleware(['web', 'auth', 'tenant'])->prefix('dashboard/vendor')->name('
     Route::get('/api/{id}', [VendorReadController::class, 'get'])
         ->middleware('can:vendor.view.rooftop')->where('id', '[0-9a-f-]{36}')->name('api.get');
 
+    Route::get('/api/vault-documents', [VendorDocumentController::class, 'vaultDocuments'])
+        ->middleware('can:vendor.manage.rooftop')->name('api.vault.documents');
+    Route::patch('/api/documents/{id}/evidence', [VendorDocumentController::class, 'setEvidence'])
+        ->middleware('can:vendor.documents.write.rooftop')->where('id', '[0-9a-f-]{36}')->name('api.documents.evidence');
+    Route::patch('/api/credentials/{id}/evidence', [VendorCredentialController::class, 'setEvidence'])
+        ->middleware('can:vendor.manage.rooftop')->where('id', '[0-9a-f-]{36}')->name('api.credentials.evidence');
+
     Route::post('/api/{vendorId}/documents', [VendorDocumentController::class, 'add'])
         ->middleware('can:vendor.documents.write.rooftop')->where('vendorId', '[0-9a-f-]{36}')->name('api.documents.add');
     Route::get('/api/{vendorId}/documents', [VendorDocumentController::class, 'list'])

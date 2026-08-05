@@ -3,13 +3,17 @@
 namespace Vctrs\Plugins\VbVendorManager\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\Concerns\ResolvesVaultEvidence;
 use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 use Vctrs\Plugins\VbVendorManager\Services\VendorService;
 
 class VendorReadController extends Controller
 {
+    use ResolvesVaultEvidence;
+
     public function __construct(private readonly VendorService $vendors) {}
 
     public function stats(): JsonResponse
@@ -70,11 +74,27 @@ class VendorReadController extends Controller
         $out = $vendor->only(VendorProfile::SAFE_FIELDS);
         $out['complianceStatus'] = $this->vendors->complianceStatus($vendor, $settings);
 
+        $ctx = app(TenantContext::class);
+        $documents = $vendor->documents()->whereNull('deleted_at')->orderByDesc('created_at')->get()
+            ->map(function ($d) use ($ctx) {
+                $row = $d->toArray();
+                $row['evidence'] = $this->resolveEvidence($d->vault_document_id, $ctx);
+
+                return $row;
+            });
+        $credentials = $vendor->credentials()->orderByDesc('created_at')->get()
+            ->map(function ($c) use ($ctx) {
+                $row = $c->toArray();
+                $row['evidence'] = $this->resolveEvidence($c->vault_document_id, $ctx);
+
+                return $row;
+            });
+
         return response()->json(['data' => [
             'vendor' => $out,
-            'documents' => $vendor->documents()->whereNull('deleted_at')->orderByDesc('created_at')->get(),
+            'documents' => $documents,
             'onboardingHistory' => $vendor->onboardingSteps()->orderBy('created_at')->get(),
-            'credentials' => $vendor->credentials()->orderByDesc('created_at')->get(),
+            'credentials' => $credentials,
         ]]);
     }
 }
