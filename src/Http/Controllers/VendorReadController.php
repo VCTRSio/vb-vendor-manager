@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Support\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Vctrs\Plugins\StaffHub\StaffDirectory;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\Concerns\ResolvesVaultEvidence;
 use Vctrs\Plugins\VbVendorManager\Models\VendorProfile;
 use Vctrs\Plugins\VbVendorManager\Services\VendorService;
@@ -95,6 +96,24 @@ class VendorReadController extends Controller
             'documents' => $documents,
             'onboardingHistory' => $vendor->onboardingSteps()->orderBy('created_at')->get(),
             'credentials' => $credentials,
+            'accountRep' => $this->resolveAccountRep($vendor->account_rep_employee_id),
         ]]);
+    }
+
+    /**
+     * Live (name-cache-free) account-rep resolution for the detail view. The staff-hub
+     * seam is optional — when it is not bound (staff-hub absent), degrade to null rather
+     * than throw. Detail-only by design: the list() view keeps the raw
+     * account_rep_employee_id pointer (via SAFE_FIELDS) and does NOT resolve names per
+     * row, so there is no N+1.
+     */
+    private function resolveAccountRep(?string $employeeId): ?array
+    {
+        if ($employeeId === null || $employeeId === '' || ! (class_exists(StaffDirectory::class) && app()->bound(StaffDirectory::class))) {
+            return null;
+        }
+        $ctx = app(TenantContext::class);
+
+        return app(StaffDirectory::class)->lookup($ctx->activeTenantType(), $ctx->activeTenantId(), $employeeId);
     }
 }

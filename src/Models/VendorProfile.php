@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $contact_phone
  * @property string $category
  * @property string $status
+ * @property string|null $account_rep_employee_id
  * @property bool $w9_on_file
  * @property Carbon|null $coi_expiry_date
  * @property Carbon|null $contract_start
@@ -56,6 +57,7 @@ class VendorProfile extends PluginModel implements AdminManageableModel
         'id', 'tenant_type', 'tenant_id',
         'company_name', 'contact_name', 'contact_email', 'contact_phone',
         'category', 'status',
+        'account_rep_employee_id',
         'w9_on_file',
         'coi_expiry_date',
         'contract_start', 'contract_end',

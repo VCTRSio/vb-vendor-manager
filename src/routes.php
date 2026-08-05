@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorAccountRepController;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorAdminController;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorCredentialController;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorDocumentAdminController;
@@ -40,6 +41,11 @@ Route::middleware(['web', 'auth', 'tenant'])->prefix('dashboard/vendor')->name('
         ->middleware('can:vendor.view.rooftop')->name('api.list');
     Route::get('/api/{id}', [VendorReadController::class, 'get'])
         ->middleware('can:vendor.view.rooftop')->where('id', '[0-9a-f-]{36}')->name('api.get');
+
+    Route::get('/api/assignable-staff', [VendorAccountRepController::class, 'assignableStaff'])
+        ->middleware('can:vendor.manage.rooftop')->name('api.assignable.staff');
+    Route::put('/api/{vendorId}/account-rep', [VendorAccountRepController::class, 'assign'])
+        ->middleware('can:vendor.manage.rooftop')->where('vendorId', '[0-9a-f-]{36}')->name('api.account.rep');
 
     Route::get('/api/vault-documents', [VendorDocumentController::class, 'vaultDocuments'])
         ->middleware('can:vendor.manage.rooftop')->name('api.vault.documents');
