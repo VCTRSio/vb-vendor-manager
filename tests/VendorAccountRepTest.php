@@ -12,7 +12,8 @@ require_once __DIR__.'/vm_bootstrap.php';
 
 function vmFakeStaff(): void
 {
-    app()->instance(StaffDirectory::class, new class extends StaffDirectory {
+    app()->instance(StaffDirectory::class, new class extends StaffDirectory
+    {
         public function listAssignable(string $tenantType, string $tenantId, ?string $departmentId = null, ?string $search = null, int $limit = 100): array
         {
             return [['id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'display_name' => 'Dana Rep']];
@@ -71,4 +72,16 @@ it('clears a rep: nulls the column and unlinks the edge', function () {
 
     expect($vendor->fresh()->account_rep_employee_id)->toBeNull()
         ->and(vmProfileEdges((string) $vendor->id))->toBe([]);
+});
+
+// Direct authorization guard on the account-rep assign route itself (gated by
+// `vendor.manage.rooftop`) — proven on THIS route, not on a sibling that shares
+// the slug.
+it('denies account-rep assign without manage permission', function () {
+    vmFeatureUser(['+vb-vendor-manager.read.rooftop', '+vb-vendor-manager.manage.rooftop']); // install + boot routes
+    $vendor = VendorProfile::create(['tenant_type' => 'rooftop', 'tenant_id' => PLUGIN_TEST_TENANT, 'company_name' => 'Acme', 'category' => 'oem', 'status' => 'active']);
+
+    $this->actingAs(pluginTestUser('rooftop_owner', ['-vendor.manage.rooftop']))
+        ->putJson("/dashboard/vendor/api/{$vendor->id}/account-rep", ['employeeId' => null])
+        ->assertForbidden();
 });

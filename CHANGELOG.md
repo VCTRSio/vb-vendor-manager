@@ -2,6 +2,31 @@
 
 All notable changes to Vendor Manager are documented here.
 
+## [1.1.1] - 2026-08-05
+
+Fast-follow cleanup on the 1.1.0 cross-plugin linking pass. Additive, zero core changes.
+
+### Fixed
+- **Picker mutations surface failures instead of swallowing them.** The CSRF-aware
+  `sendJson` helper's callers in the detail view (vault-evidence pickers on documents
+  and credentials, and the account-rep picker) previously `.catch(() => {})`'d a
+  rejected write, leaving the user with no feedback. They now log to the console and
+  render the shared error banner, and no longer bump/reload on failure — so the UI
+  never flips to a false "saved" state on a rejected mutation.
+
+### Changed
+- **Style: `ordered_imports`.** Re-ordered the controller `use` statements in
+  `src/routes.php` so the file is Pint-clean (`VendorApiKeyController` was out of
+  alphabetical order).
+
+### Added
+- **Direct authorization tests on the evidence and account-rep routes.** Added tests
+  asserting that a user lacking the route's `can:` grant gets 403 directly on
+  `PATCH .../documents/{id}/evidence` (`vendor.documents.write.rooftop`),
+  `PATCH .../credentials/{id}/evidence` (`vendor.manage.rooftop`), and
+  `PUT .../{vendorId}/account-rep` (`vendor.manage.rooftop`) — no longer relying only
+  on sibling routes that share the same permission slug.
+
 ## [1.1.0] - 2026-08-04
 
 Cross-plugin linking (Expand pass). All additive, zero core changes.

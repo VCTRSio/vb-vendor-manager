@@ -3,10 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorAccountRepController;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorAdminController;
+use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorApiKeyController;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorCredentialController;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorDocumentAdminController;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorDocumentController;
-use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorApiKeyController;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorMutationController;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorOnboardingController;
 use Vctrs\Plugins\VbVendorManager\Http\Controllers\VendorReadController;

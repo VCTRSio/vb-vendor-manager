@@ -244,7 +244,7 @@ const plugin: PluginModule = {
     // Per-row vault-evidence picker + resolved-evidence affordance, shared by the
     // Documents and Credentials sections. The DISPLAY (it.evidence) is independent of
     // the picker; the <select> only renders when the vault seam returned candidates.
-    function EvidenceControls({ it, kind, vaultDocs, onLinked }: { it: any; kind: 'documents' | 'credentials'; vaultDocs: any[]; onLinked: () => void }) {
+    function EvidenceControls({ it, kind, vaultDocs, onLinked, onError }: { it: any; kind: 'documents' | 'credentials'; vaultDocs: any[]; onLinked: () => void; onError: (e: unknown) => void }) {
       const typeLabel = kind === 'documents' ? it.document_type : it.credential_type;
       const children: any[] = [
         R.createElement('span', { key: 'type', style: { fontSize: 12, opacity: 0.7 } }, typeLabel),
@@ -271,7 +271,7 @@ const plugin: PluginModule = {
                 const val = e.target.value;
                 sendJson(`${BASE}/${kind}/${it.id}/evidence`, 'PATCH', { vaultDocumentId: val || null })
                   .then(onLinked)
-                  .catch(() => {});
+                  .catch(onError);
               },
             },
             R.createElement('option', { key: '', value: '' }, '— no evidence —'),
@@ -316,6 +316,13 @@ const plugin: PluginModule = {
       }, [id]);
 
       const bump = () => setReload((n) => n + 1);
+      // Surface picker mutation failures instead of swallowing them: log for the
+      // console + show the shared vm-error banner, and DON'T call bump (so the UI
+      // never flips to a false "saved" state on a rejected write).
+      const fail = (e: unknown) => {
+        console.error('[vendor-manager] picker mutation failed', e);
+        setError(String(e));
+      };
 
       const vendor = data?.vendor;
       const documents = data?.documents ?? [];
@@ -363,7 +370,7 @@ const plugin: PluginModule = {
                       const val = e.target.value;
                       sendJson(`${BASE}/${id}/account-rep`, 'PUT', { employeeId: val || null })
                         .then(bump)
-                        .catch(() => {});
+                        .catch(fail);
                     },
                   },
                   R.createElement('option', { key: '', value: '' }, '— unassigned —'),
@@ -394,7 +401,7 @@ const plugin: PluginModule = {
                 R.createElement(DetailRow, {
                   key: c.id,
                   label: c.label ?? c.credential_type ?? 'Credential',
-                  meta: R.createElement(EvidenceControls, { it: c, kind: 'credentials', vaultDocs, onLinked: bump }),
+                  meta: R.createElement(EvidenceControls, { it: c, kind: 'credentials', vaultDocs, onLinked: bump, onError: fail }),
                 }),
             }),
             R.createElement(DetailSection, {
@@ -405,7 +412,7 @@ const plugin: PluginModule = {
                 R.createElement(DetailRow, {
                   key: d.id,
                   label: d.file_name ?? d.document_type ?? 'Document',
-                  meta: R.createElement(EvidenceControls, { it: d, kind: 'documents', vaultDocs, onLinked: bump }),
+                  meta: R.createElement(EvidenceControls, { it: d, kind: 'documents', vaultDocs, onLinked: bump, onError: fail }),
                 }),
             }),
           ),

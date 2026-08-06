@@ -105,3 +105,28 @@ it('enriches get() document + credential rows with resolved evidence', function 
     expect($res->json('data.documents.0.evidence.title'))->toBe('COI '.substr($docId, 0, 4))
         ->and($res->json('data.credentials.0.evidence'))->toBeNull();
 });
+
+// ── Direct authorization guards on the evidence PATCH routes ─────────────────────
+// These prove the deny DIRECTLY on the evidence routes (not merely on a sibling
+// route that shares the same permission slug). The document route is gated by
+// `vendor.documents.write.rooftop`; the credential route by `vendor.manage.rooftop`.
+
+it('denies setEvidence on a document without documents.write permission', function () {
+    vmFeatureUser(); // install + boot the plugin routes for this tenant
+    $vendor = VendorProfile::create(['tenant_type' => 'rooftop', 'tenant_id' => PLUGIN_TEST_TENANT, 'company_name' => 'Acme', 'category' => 'oem', 'status' => 'active']);
+    $doc = VendorDocument::create(['vendor_id' => $vendor->id, 'document_type' => 'coi', 'vault_document_id' => null]);
+
+    $this->actingAs(pluginTestUser('rooftop_owner', ['-vendor.documents.write.rooftop']))
+        ->patchJson("/dashboard/vendor/api/documents/{$doc->id}/evidence", ['vaultDocumentId' => null])
+        ->assertForbidden();
+});
+
+it('denies setEvidence on a credential without manage permission', function () {
+    vmFeatureUser(); // install + boot the plugin routes for this tenant
+    $vendor = VendorProfile::create(['tenant_type' => 'rooftop', 'tenant_id' => PLUGIN_TEST_TENANT, 'company_name' => 'Acme', 'category' => 'oem', 'status' => 'active']);
+    $cred = VendorCredential::create(['vendor_id' => $vendor->id, 'credential_type' => 'other', 'credential_name' => 'Lic', 'vault_document_id' => null]);
+
+    $this->actingAs(pluginTestUser('rooftop_owner', ['-vendor.manage.rooftop']))
+        ->patchJson("/dashboard/vendor/api/credentials/{$cred->id}/evidence", ['vaultDocumentId' => null])
+        ->assertForbidden();
+});
