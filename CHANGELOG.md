@@ -2,6 +2,35 @@
 
 All notable changes to Vendor Manager are documented here.
 
+## [1.1.3] - 2026-08-17
+
+Source-hygiene release. No behaviour change, no schema change, no stored-data change.
+
+### Changed
+
+- **Entity-type constants now alias core.** `VendorRelation::VAULT_TARGET_TYPE` and
+  `::STAFF_TARGET_TYPE` reference `App\Support\EntityType`'s constants instead of
+  redeclaring their string literals. The values are byte-identical to what is already
+  stored in `entity_references`, so this is a no-op on disk — no migration required.
+  The `*_SOURCE_TYPE` constants remain literals: plugin-owned source types are
+  namespaced to this plugin and have no core registry entry, since `EntityType`
+  catalogs the shared cross-plugin nouns rather than each plugin's own row types.
+
+### Fixed
+
+- **Corrects an inaccurate note shipped in 1.1.2.** That release stated the entity-type
+  constants were left plugin-local because "core has no registry for them". That was
+  wrong: `App\Support\EntityType` already existed and simply had no adopters. The note
+  is corrected in `VendorRelation`'s docblock and the constants are now aliased to the
+  registry as they should have been. Documentation only — the 1.1.2 code was correct
+  and no stored data was ever affected.
+
+### Added
+
+- `VendorRelationVocabTest` gains coverage pinning the literal on-disk entity-type
+  strings, asserting the `EntityType` aliasing, and asserting the plugin-owned source
+  types are correctly *absent* from the core registry.
+
 ## [1.1.2] - 2026-08-17
 
 Source-hygiene release. No behaviour change, no schema change, no stored-data change.

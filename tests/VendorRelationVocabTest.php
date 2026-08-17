@@ -17,6 +17,7 @@ declare(strict_types=1);
  */
 
 use App\Support\EntityRelation;
+use App\Support\EntityType;
 use Vctrs\Plugins\VbVendorManager\Support\VendorRelation;
 
 require_once __DIR__.'/vm_bootstrap.php';
@@ -40,10 +41,25 @@ it('uses relations core recognises as valid', function () {
         ->and(EntityRelation::isValid(VendorRelation::ACCOUNT_REP))->toBeTrue();
 });
 
-it('keeps the entity-type constants plugin-local (core has no registry for them)', function () {
+it('pins the on-disk entity-type strings the plugin writes', function () {
     expect(VendorRelation::DOC_SOURCE_TYPE)->toBe('vb-vendor-manager.document')
         ->and(VendorRelation::CRED_SOURCE_TYPE)->toBe('vb-vendor-manager.credential')
         ->and(VendorRelation::PROFILE_SOURCE_TYPE)->toBe('vb-vendor-manager.profile')
         ->and(VendorRelation::VAULT_TARGET_TYPE)->toBe('vault.document')
         ->and(VendorRelation::STAFF_TARGET_TYPE)->toBe('staff.employee');
+});
+
+it('aliases the core EntityType registry for its target types', function () {
+    expect(VendorRelation::VAULT_TARGET_TYPE)->toBe(EntityType::VAULT_DOCUMENT)
+        ->and(VendorRelation::STAFF_TARGET_TYPE)->toBe(EntityType::STAFF_EMPLOYEE)
+        ->and(EntityType::isValid(VendorRelation::VAULT_TARGET_TYPE))->toBeTrue()
+        ->and(EntityType::isValid(VendorRelation::STAFF_TARGET_TYPE))->toBeTrue();
+});
+
+it('keeps the plugin-owned source types out of the core registry', function () {
+    // Source types are namespaced to this plugin; EntityType catalogs only the
+    // shared cross-plugin nouns, so these are correctly absent.
+    expect(EntityType::isValid(VendorRelation::DOC_SOURCE_TYPE))->toBeFalse()
+        ->and(EntityType::isValid(VendorRelation::CRED_SOURCE_TYPE))->toBeFalse()
+        ->and(EntityType::isValid(VendorRelation::PROFILE_SOURCE_TYPE))->toBeFalse();
 });

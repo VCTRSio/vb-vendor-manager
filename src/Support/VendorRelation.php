@@ -5,18 +5,27 @@ declare(strict_types=1);
 namespace Vctrs\Plugins\VbVendorManager\Support;
 
 use App\Support\EntityRelation;
+use App\Support\EntityType;
 
 /**
- * Plugin-local relation vocabulary for App\Support\EntityReferenceService edges.
- * The relation constants now ALIAS core App\Support\EntityRelation — EVIDENCE was
- * always core vocabulary, and ACCOUNT_REP was promoted in Track-B S1. The promoted
- * values are byte-identical to the strings already stored in
- * entity_references.relation, so aliasing is a no-op on disk — source cleanliness
- * only. link() still does not validate against the core registry; this is a
- * canonical vocabulary, not a gate.
+ * Plugin-local vocabulary for App\Support\EntityReferenceService edges. Both halves
+ * now ALIAS the core registries:
  *
- * The *_TYPE constants stay plugin-local: they are entity-type identifiers, not
- * relations, and core has no registry for them.
+ *  - relation VERBS  → App\Support\EntityRelation (EVIDENCE was always core
+ *    vocabulary; ACCOUNT_REP was promoted in Track-B S1)
+ *  - entity TYPES    → App\Support\EntityType (the canonical type registry)
+ *
+ * Every aliased value is byte-identical to the string already stored in
+ * entity_references, so aliasing is a no-op on disk — source cleanliness only.
+ * Neither registry is a gate: link() validates against neither.
+ *
+ * CORRECTION (v1.1.3): the v1.1.2 note claiming "core has no registry for them"
+ * was wrong — App\Support\EntityType existed all along and simply had no adopters.
+ * The *_TARGET_TYPE constants are now aliased to it.
+ *
+ * The *_SOURCE_TYPE constants stay literals: plugin-owned source types are
+ * namespaced to this plugin and have no core registry entry (EntityType catalogs
+ * the shared cross-plugin nouns, not each plugin's own row types).
  */
 final class VendorRelation
 {
@@ -32,7 +41,7 @@ final class VendorRelation
 
     public const PROFILE_SOURCE_TYPE = 'vb-vendor-manager.profile';
 
-    public const VAULT_TARGET_TYPE = 'vault.document';
+    public const VAULT_TARGET_TYPE = EntityType::VAULT_DOCUMENT;
 
-    public const STAFF_TARGET_TYPE = 'staff.employee';
+    public const STAFF_TARGET_TYPE = EntityType::STAFF_EMPLOYEE;
 }
