@@ -4,19 +4,27 @@ declare(strict_types=1);
 
 namespace Vctrs\Plugins\VbVendorManager\Support;
 
+use App\Support\EntityRelation;
+
 /**
  * Plugin-local relation vocabulary for App\Support\EntityReferenceService edges.
- * Values intentionally match core App\Support\EntityRelation's shared vocabulary
- * ('evidence'); link() does not validate against the core enum, so we redeclare here
- * to keep this Expand pass self-contained and zero-core.
+ * The relation constants now ALIAS core App\Support\EntityRelation — EVIDENCE was
+ * always core vocabulary, and ACCOUNT_REP was promoted in Track-B S1. The promoted
+ * values are byte-identical to the strings already stored in
+ * entity_references.relation, so aliasing is a no-op on disk — source cleanliness
+ * only. link() still does not validate against the core registry; this is a
+ * canonical vocabulary, not a gate.
+ *
+ * The *_TYPE constants stay plugin-local: they are entity-type identifiers, not
+ * relations, and core has no registry for them.
  */
 final class VendorRelation
 {
     /** vendor document / credential → the vault document that is its evidence. */
-    public const EVIDENCE = 'evidence';
+    public const EVIDENCE = EntityRelation::EVIDENCE;
 
     /** vendor profile → the staff employee who is its internal account rep. */
-    public const ACCOUNT_REP = 'account_rep';
+    public const ACCOUNT_REP = EntityRelation::ACCOUNT_REP;
 
     public const DOC_SOURCE_TYPE = 'vb-vendor-manager.document';
 

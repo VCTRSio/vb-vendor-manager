@@ -19,7 +19,7 @@ function vmFakeStaff(): void
             return [['id' => 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'display_name' => 'Dana Rep']];
         }
 
-        public function lookup(string $tenantType, string $tenantId, string $id): ?array
+        public function lookup(string $tenantType, string $tenantId, string $id, bool $includePii = false): ?array
         {
             return ['id' => $id, 'display_name' => 'Dana Rep'];
         }

@@ -2,6 +2,36 @@
 
 All notable changes to Vendor Manager are documented here.
 
+## [1.1.2] - 2026-08-17
+
+Source-hygiene release. No behaviour change, no schema change, no stored-data change.
+
+### Changed
+
+- **Relation vocabulary now aliases core.** `VendorRelation::EVIDENCE` and `::ACCOUNT_REP`
+  reference `App\Support\EntityRelation`'s constants instead of redeclaring their string
+  literals (`EVIDENCE` was always core vocabulary; `ACCOUNT_REP` was promoted in Track-B
+  S1). The promoted values are byte-identical, so this is a no-op on disk — every existing
+  `entity_references.relation` row is unaffected and no migration is required. The
+  `*_SOURCE_TYPE` / `*_TARGET_TYPE` constants stay plugin-local: they are entity-type
+  identifiers, not relations, and core has no registry for them.
+  `EntityReferenceService::link()` still does not validate against the registry, so this
+  remains a canonical vocabulary rather than a gate.
+
+### Fixed
+
+- **Test mocks track the current core `StaffDirectory` seam.** Track-B S4 added a fourth
+  `bool $includePii = false` parameter to `StaffDirectory::lookup()`. The anonymous
+  `StaffDirectory` subclass in `VendorAccountRepTest` still declared the old 3-argument
+  signature, which raised a fatal "declaration must be compatible" error against core
+  ≥ `3eaaca0`. Signature updated. The `VaultDirectory` and `ChannelDirectory` mocks were
+  checked and already match current core. Test-only — no shipped source was affected.
+
+### Added
+
+- `VendorRelationVocabTest` pins the literal on-disk relation strings, so a future change
+  to a core constant's value cannot silently rewrite the edges this plugin writes.
+
 ## [1.1.1] - 2026-08-05
 
 Fast-follow cleanup on the 1.1.0 cross-plugin linking pass. Additive, zero core changes.
