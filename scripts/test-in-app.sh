@@ -33,7 +33,8 @@ set -euo pipefail
 
 PLUGIN="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MAIN="${MAIN:-$(cd "$PLUGIN/../../vctrbase-php" && pwd)}"
-WT="${WT:-$(cd "$PLUGIN/../../vctrbase-php-vendor-test" && pwd)}"
+CORE_PIN="${CORE_PIN:-a93cac8}"
+WT="${WT:-$PLUGIN/../../vctrbase-php-vendor-test}"
 KEYDIR="${KEYDIR:-$(cd "$PLUGIN/../../.plugin-signing-keys" && pwd)}"
 DB="${DB:-vctrs_test_vendor}"
 
@@ -44,6 +45,13 @@ EXTRA_ARGS="$*"
 
 PRIV="$(cat "$KEYDIR/vctrs.privkey.b64")"
 PUB="$(cat "$KEYDIR/vctrs.pubkey.b64")"
+
+# ── Create the throwaway app worktree if missing, pinned to an explicit core SHA ─
+if [ ! -d "$WT" ]; then
+  echo ">> creating throwaway worktree $WT at core $CORE_PIN"
+  git -C "$MAIN" worktree add -f --detach "$WT" "$CORE_PIN" >/dev/null 2>&1
+fi
+WT="$(cd "$WT" && pwd)"
 
 DEST="$WT/tests/Feature/Plugins/VbVendorManager"
 
@@ -73,7 +81,7 @@ docker compose exec -T postgres sh -c \
    echo '   '$DB' ready'"
 
 echo ">> running pest ($TARGET) in worktree ($WT)…"
-docker compose run --rm -T \
+docker compose run --rm -T --no-deps \
   -v "$WT:/var/www/html" \
   -v "$MAIN/vendor:/var/www/html/vendor" \
   -v "$PLUGIN:/vm-src:ro" \
